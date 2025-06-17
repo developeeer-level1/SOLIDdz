@@ -1,4 +1,7 @@
-﻿namespace PATTERNSdz
+﻿using System.Globalization;
+using System.Text.Json;
+
+namespace PATTERNSdz
 {
     public interface IShape
     {
@@ -37,25 +40,63 @@
         }
     }
 
-    internal class Program
+
+
+    public interface ICoordinatesService
     {
-        static void Main(string[] args)
+        (double Latitude, double Longitude) GetCoordinates();
+    }
+    public class GeoLocation
+    {
+        public string GetRawCoordinates()
         {
-            //1
-            AppConfig.SetSetting("Theme", "Dark");
-            AppConfig.SetSetting("Language", "English");
-            Console.WriteLine(AppConfig.GetSetting("Theme"));
-            Console.WriteLine(AppConfig.GetSetting("Language"));
+            return "37.7749, -122.4194";
+        }
+    }
+
+    public class GeoLocationAdapter : ICoordinatesService
+    {
+        private readonly GeoLocation _geoLocation;
+
+        public GeoLocationAdapter(GeoLocation geoLocation)
+        {
+            _geoLocation = geoLocation;
+        }
+
+        public (double Latitude, double Longitude) GetCoordinates()
+        {
+            string[] parts = _geoLocation.GetRawCoordinates().Split(',');
+            double lat = double.Parse(parts[0].Trim(), CultureInfo.InvariantCulture);
+            double lon = double.Parse(parts[1].Trim(), CultureInfo.InvariantCulture);
+            return (lat, lon);
+        }
+    }
+
+    class Program
+    {
+        static void Main()
+        {
+            AppConfig config = AppConfig.Instance;
+            config.SetSetting("Theme", "Dark");
+            config.SetSetting("Language", "English");
+            Console.WriteLine(config.GetSetting("Theme"));
+            Console.WriteLine(config.GetSetting("Language"));
 
 
-            //2
+
             ShapeFactory circleFactory = new CircleFactory();
             IShape circle = circleFactory.CreateShape();
             circle.Draw();
-
             ShapeFactory rectangleFactory = new RectangleFactory();
             IShape rectangle = rectangleFactory.CreateShape();
             rectangle.Draw();
+
+
+
+            GeoLocation geolocation = new GeoLocation();
+            ICoordinatesService coordinatesService = new GeoLocationAdapter(geolocation);
+            var coordinates = coordinatesService.GetCoordinates();
+            Console.WriteLine($"Latitude: {coordinates.Latitude}, Longitude: {coordinates.Longitude}");
         }
     }
 }

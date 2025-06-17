@@ -1,39 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
-
-public class AppConfig
+namespace PATTERNSdz
 {
-    private static AppConfig instance;
-    private static object @lock = new object();
-    static Dictionary<string, string> settings;
-    private static string filePath = "config.json";
-    private AppConfig()
+    public class AppConfig
     {
-        if (File.Exists(filePath))
+        private static readonly Lazy<AppConfig> _instance = new Lazy<AppConfig>(() => new AppConfig());
+        private Dictionary<string, string> _settings;
+        private const string FilePath = "settings.json";
+        public static AppConfig Instance => _instance.Value;
+        private AppConfig()
         {
-            string json = File.ReadAllText(filePath);
-            settings = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+            if (File.Exists(FilePath))
+            {
+                string json = File.ReadAllText(FilePath);
+                _settings = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+            }
+            else
+            {
+                _settings = new Dictionary<string, string>();
+            }
         }
-        else
+        public void SetSetting(string key, string value)
         {
-            settings = new Dictionary<string, string>();
+            _settings[key] = value;
+            SaveSettings();
         }
-    }
-    public static void SetSetting(string key, string value)
-    {
-        settings[key] = value;
-        SaveToFile();
-    }
-    public static string GetSetting(string key)
-    {
-        return settings.ContainsKey(key) ? settings[key] : null;
-    }
-    public static void SaveToFile()
-    {
-        string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(filePath, json);
+
+        public string GetSetting(string key)
+        {
+            return _settings.ContainsKey(key) ? _settings[key] : "Not found";
+        }
+        private void SaveSettings()
+        {
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            string json = JsonSerializer.Serialize(_settings, options);
+            File.WriteAllText(FilePath, json);
+        }
     }
 }
