@@ -9,10 +9,10 @@ namespace PATTERNSdz
 {
     public class AppConfig
     {
-        private static readonly Lazy<AppConfig> _instance = new Lazy<AppConfig>(() => new AppConfig());
+        private static AppConfig _instance = new AppConfig();
         private Dictionary<string, string> _settings;
         private const string FilePath = "settings.json";
-        public static AppConfig Instance => _instance.Value;
+        public static AppConfig Instance => _instance;
         private AppConfig()
         {
             if (File.Exists(FilePath))
